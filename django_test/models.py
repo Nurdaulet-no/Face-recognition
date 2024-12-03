@@ -8,7 +8,7 @@ def student_image_upload_path(instance, filename):
     extension = filename.split('.')[-1]
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     new_filename = f"{name}_{surname}_{timestamp}.{extension}"
-    return os.path.join('images', new_filename)
+    return os.path.join('collected-faces', new_filename)
 
 class Student(models.Model):
     name = models.CharField(max_length=100)
