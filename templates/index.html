@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Data Entry Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #submitBtn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #submitBtn:hover {
+            background-color: #45a049;
+        }
+        #studentList {
+            margin-top: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <form id="studentForm">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="surname">Surname</label>
+            <input type="text" id="surname" required>
+        </div>
+        <div class="form-group">
+            <label for="image">Student Image</label>
+            <input type="file" id="image" accept="image/*">
+        </div>
+        <button type="submit" id="submitBtn">Add Student</button>
+    </form>
+
+    <div id="studentList">
+        <h3>Students:</h3>
+        <ul id="students"></ul>
+    </div>
+
+    <script>
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get CSRF token from the cookie
+    const csrftoken = getCookie('csrftoken');
+    
+    // Collect form data
+    const name = document.getElementById('name').value;
+    const surname = document.getElementById('surname').value;
+    const imageFile = document.getElementById('image').files[0];
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('surname', surname);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
+
+    // Send data to Django backend
+    fetch('add_students/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Add to list
+        const studentsList = document.getElementById('students');
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            Name: ${data.name} 
+            Surname: ${data.surname} 
+            ${data.image ? `Photo: <img src="${data.image}" width="50">` : ''}
+        `;
+        studentsList.appendChild(listItem);
+
+        // Clear form
+        document.getElementById('name').value = '';
+        document.getElementById('surname').value = '';
+        document.getElementById('image').value = '';
+    })
+    .catch(error => console.error('Error:', error));
+    });
+    
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
+</body>
+</html>
